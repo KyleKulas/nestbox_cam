@@ -1,0 +1,13 @@
+[Unit]
+Description= Video Capture
+After=multi-user.target mnt-exdisk.mount
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/scripts/video_capture_picam.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

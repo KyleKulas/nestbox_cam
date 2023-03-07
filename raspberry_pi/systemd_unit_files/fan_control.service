@@ -1,0 +1,13 @@
+[Unit]
+Description= Fan Control Service
+After=multi-user.target
+StartLimitIntervalSec=30
+StartLimitBurst=2
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/scripts/fan_control.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
