@@ -78,7 +78,8 @@ It is helpful but not necessary for the Raspberry Pi to have a static ip address
 
 3. Edit network preferences. 
     - Right click on the network icon and choose "Wireless and Wired Network Settings".
-    - Choose the interface and enter appropriate information in the boxes
+    - Choose the interface and enter appropriate information in the boxes:
+    
     ![network_preferences](/images/network_preferences.png)
 
     **Alternatively:**
