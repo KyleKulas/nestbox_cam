@@ -159,6 +159,7 @@ def main():
     video_files = sorted([f for f in os.listdir(VIDEO_DIR) if f.endswith('.mp4')])
     new_videos = [video for video in video_files if video not in videos_checked]
     counter = 1
+    total_highlights_found = 0
     total_videos_to_process = len(new_videos)
     print(f'{total_videos_to_process} new videos found.')
     for video in new_videos:
@@ -169,8 +170,9 @@ def main():
         create_movement_subclips(cleaned_movement_times,video)
         add_video_to_checked_log(video)
         print(f'{len(cleaned_movement_times)} highlights found.')
+        total_highlights_found += len(cleaned_movement_times)
         counter += 1
-
+    print(f'{total_highlights_found} total highlights found')
 
 if __name__ == '__main__':
     main()
