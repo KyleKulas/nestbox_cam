@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import timedelta
 
 import numpy as np
 import cv2
@@ -155,6 +157,7 @@ def get_checked_video_list():
     
 
 def main():
+    start_time = time.time()
     videos_checked = get_checked_video_list()
     video_files = sorted([f for f in os.listdir(VIDEO_DIR) if f.endswith('.mp4')])
     new_videos = [video for video in video_files if video not in videos_checked]
@@ -172,6 +175,8 @@ def main():
         print(f'{len(cleaned_movement_times)} highlights found.')
         total_highlights_found += len(cleaned_movement_times)
         counter += 1
+    elapsed = time.time() - start_time
+    print(f'Total time: {str(timedelta(seconds=elapsed))}')
     print(f'{total_highlights_found} total highlights found')
 
 if __name__ == '__main__':
