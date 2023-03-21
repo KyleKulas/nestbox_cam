@@ -1,13 +1,41 @@
 import os
 import time
 from datetime import timedelta
+from configparser import ConfigParser
 
+import pysftp
 import numpy as np
 import cv2
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
-from tqdm import trange
+from tqdm import trange, tqdm
 
 VIDEO_DIR = r'C:\Users\kylek\nest_cam_videos'
+
+def download_new_videos():
+    config = ConfigParser()
+    config.read(r"C:\Users\kylek\OneDrive\Documents\Code\shared_with_VM\nest_cam\video_analysis\config.ini")
+    hostname = config.get('pi_server', 'hostname')
+    username = config.get('pi_server', 'username')
+    password = config.get('pi_server', 'password')
+    remote_path = config.get('pi_server', 'path')
+
+    connection = pysftp.Connection(
+                    host=hostname,
+                    username=username,
+                    password=password,
+                    port=22)
+    
+    remote_videos = sorted([f for f in connection.listdir(remote_path) if f.endswith('.mp4')])
+    # remove last video as it is the video that is currently recording
+    remote_videos = remote_videos[:-1]
+
+    # Remove videos from list that are already processed or already on local machine
+    videos_checked = get_checked_video_list()
+    local_videos = sorted([f for f in os.listdir(VIDEO_DIR) if f.endswith('.mp4')])
+    videos_to_download = [f for f in remote_videos if f not in videos_checked and f not in local_videos]
+
+    for file in tqdm(videos_to_download):
+        connection.get(f'{remote_path}/{file}', os.path.join(VIDEO_DIR, file))
 
 def get_movement_times(
         file_path, 
@@ -37,13 +65,13 @@ def get_movement_times(
 
     """
     # Initialize variables
-    movement_dectected = False
+    movement_detected = False
     movement_times = []
     movement_start_time = 0
     movement_finish_time = 0
     frame_sum = 0
 
-    # Inititalize backgroung subtractor
+    # Initialize background subtractor
     background_subtractor = cv2.createBackgroundSubtractorMOG2() 
     
     # Start video capture
@@ -66,24 +94,24 @@ def get_movement_times(
             frame_sum = fg_mask.sum()
 
             # Record start of movement time
-            if frame_sum > movement_threshold and movement_dectected == False:
+            if frame_sum > movement_threshold and movement_detected == False:
                 movement_start_time = current_frame / fps
-                movement_dectected = True
+                movement_detected = True
             # Record end of movement time
-            if frame_sum < movement_threshold and movement_dectected == True:
+            if frame_sum < movement_threshold and movement_detected == True:
                 movement_finish_time = current_frame / fps
                 movement_times.append([movement_start_time,movement_finish_time])
-                movement_dectected = False
+                movement_detected = False
 
         else:
             # Frame capture read not successful, go to next frame
             continue
 
     # Record end of movement time if movement continues through the last frame
-    if frame_sum < movement_threshold and movement_dectected == True:
+    if frame_sum < movement_threshold and movement_detected == True:
         movement_finish_time = current_frame / fps
         movement_times.append([movement_start_time,movement_finish_time])
-        movement_dectected = False
+        movement_detected = False
 
     cap.release()
 
@@ -129,7 +157,7 @@ def remove_short_movements(movement_times, min_duration=2):
     return cleaned_movement_times
 
 def create_movement_subclips(movement_times, video_file):
-    """Split video file into seperate clips based on movement_times"""
+    """Split video file into separate clips based on movement_times"""
     highlights_dir = os.path.join(VIDEO_DIR, 'highlights')
     # Create highlights directory if it doesn't exist
     if os.path.exists(highlights_dir) == False:
@@ -158,6 +186,9 @@ def get_checked_video_list():
 
 def main():
     start_time = time.time()
+    print('Starting Nest Box Video Processor')
+    print('Getting new videos from Pi')
+    download_new_videos()
     videos_checked = get_checked_video_list()
     video_files = sorted([f for f in os.listdir(VIDEO_DIR) if f.endswith('.mp4')])
     new_videos = [video for video in video_files if video not in videos_checked]
