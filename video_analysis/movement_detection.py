@@ -209,6 +209,6 @@ def main():
     elapsed = time.time() - start_time
     print(f'Total time: {str(timedelta(seconds=elapsed))}')
     print(f'{total_highlights_found} total highlights found')
-
+    os.system("pause")
 if __name__ == '__main__':
     main()
