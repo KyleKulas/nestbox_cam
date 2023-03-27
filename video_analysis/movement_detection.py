@@ -108,7 +108,7 @@ def get_movement_times(
             continue
 
     # Record end of movement time if movement continues through the last frame
-    if frame_sum < movement_threshold and movement_detected == True:
+    if frame_sum > movement_threshold and movement_detected == True:
         movement_finish_time = current_frame / fps
         movement_times.append([movement_start_time,movement_finish_time])
         movement_detected = False
