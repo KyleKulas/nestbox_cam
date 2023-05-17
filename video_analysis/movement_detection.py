@@ -19,11 +19,15 @@ def download_new_videos():
     password = config.get('pi_server', 'password')
     remote_path = config.get('pi_server', 'path')
 
-    connection = pysftp.Connection(
-                    host=hostname,
-                    username=username,
-                    password=password,
-                    port=22)
+    try:
+        connection = pysftp.Connection(
+                        host=hostname,
+                        username=username,
+                        password=password,
+                        port=22)
+    except pysftp.SSHException:
+        print('Could not connect to Pi')
+        return
     
     remote_videos = sorted([f for f in connection.listdir(remote_path) if f.endswith('.mp4')])
     # remove last video as it is the video that is currently recording
@@ -39,7 +43,7 @@ def download_new_videos():
 
 def get_movement_times(
         file_path, 
-        movement_threshold=20_000_000, 
+        movement_threshold=1_000_000, 
         frames_to_skip=10):
     """Function to analyze video file and return times which contain movement. 
     Uses OpenCV background subtractor to create a movement mask where white 
@@ -72,7 +76,7 @@ def get_movement_times(
     frame_sum = 0
 
     # Initialize background subtractor
-    background_subtractor = cv2.createBackgroundSubtractorMOG2() 
+    background_subtractor = cv2.createBackgroundSubtractorMOG2(history=30) 
     
     # Start video capture
     cap = cv2.VideoCapture(file_path)
